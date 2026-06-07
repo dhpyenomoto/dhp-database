@@ -1,0 +1,85 @@
+// dhp都市開発GP 社内プロジェクト情報データベース
+// 開発: SQLite / 本番: PostgreSQL（datasource.provider を "postgresql" に変更）
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 社員アカウント
+model User {
+  id           String   @id @default(cuid())
+  employeeId   String   @unique // 社員ID（ログインID）
+  name         String? // 表示名（任意）
+  passwordHash String // bcrypt ハッシュ（平文保存は禁止）
+  role         String   @default("member") // member / admin
+  isActive     Boolean  @default(true) // 無効化された社員は false
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// プロジェクト本体（仕様 §4.1 の13項目＋メタ情報）
+model Project {
+  id           String   @id @default(cuid())
+  projectNo    String   @unique // 1. プロジェクトNO.（自動採番 P-0001 / 手動上書き可）
+  status       String // 2. プロジェクト状況（検討中/決定/進行中/完了）
+  name         String // 3. プロジェクト名称（必須）
+  category     String // 4. 区分
+  summary      String? // 5. 概要（自由記述）
+  owner        String? // 6. 担当者名
+  infoRoute    String? // 7. 情報ルート
+  approach     String? // 8. 取組方針
+  landSize     String? // 9. 土地規模
+  buildingSize String? // 10. 建物規模
+  buildingType String? // 11. 建物種別
+  priceSummary String? // 12. 価格概要
+  // 13. プロジェクトの現状（進捗ログ）
+  progressEntries ProgressEntry[]
+
+  // メタ情報
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedById String
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Boolean   @default(false) // 論理削除
+  deletedById String?
+  deletedAt   DateTime?
+
+  @@index([status])
+  @@index([isDeleted])
+}
+
+/// プロジェクトの現状＝進捗ログ（時系列で積み上げ）
+model ProgressEntry {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  body       String // 本文
+  authorId   String // 投稿者の社員ID
+  createdAt  DateTime @default(now())
+  // 修正（履歴は AuditLog に記録、表示用に最終修正者/日時を保持）
+  editedById String?
+  editedAt   DateTime?
+  // 論理削除（取り消し線で表示し続ける）
+  isDeleted   Boolean   @default(false)
+  deletedById String?
+  deletedAt   DateTime?
+
+  @@index([projectId])
+}
+
+/// 監査ログ（すべての変更操作を横断的に記録）
+model AuditLog {
+  id           String   @id @default(cuid())
+  entityType   String // project / progressEntry
+  entityId     String
+  action       String // create / update / delete / restore
+  fieldChanges String? // 変更前後の差分（JSON文字列。SQLite/PG 両対応のため文字列で保持）
+  actorId      String // 操作した社員ID
+  createdAt    DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
