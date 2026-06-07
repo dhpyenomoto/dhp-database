@@ -1,8 +1,8 @@
 # Vercel へのデプロイ手順（dhp-database）
 
-このアプリ（`dhp-database/`）を Vercel に公開する手順です。
-所要 15〜20分。**既存の公開静的サイトとは別の新規 Vercel プロジェクト**として作成するため、
-既存サイトには影響しません。
+このアプリ（`dhpyenomoto/dhp-database` リポジトリ）を Vercel に公開する手順です。
+所要 15〜20分。アプリは**リポジトリの直下**に配置されているため、Vercel の
+**Root Directory はデフォルト（`/`）のまま**で動作します。
 
 > 重要: 本番では **PostgreSQL** を使用します（SQLite は Vercel のサーバーレス環境で
 > 永続化されないため）。provider はビルド時に環境変数 `DATABASE_PROVIDER=postgresql` で
@@ -13,7 +13,7 @@
 ## 全体の流れ
 
 1. PostgreSQL データベースを用意（接続文字列を取得）
-2. Vercel で新規プロジェクトを作成（Root Directory を `dhp-database` に設定）
+2. Vercel で新規プロジェクトを作成（`dhp-database` リポジトリを import）
 3. 環境変数を3つ設定
 4. デプロイ
 5. データベースの初期化（テーブル作成＋初期管理者投入）
@@ -37,9 +37,9 @@
 ## 2. Vercel で新規プロジェクトを作成
 
 1. https://vercel.com にログイン → **Add New… → Project**。
-2. GitHub リポジトリ **`dhpyenomoto/dhphome`** を **Import**。
-3. **Root Directory** を **`dhp-database`** に設定（"Edit" を押してサブフォルダを選択）。
-   - ※ここを必ず `dhp-database` にしてください。ルートのままだと既存の静的サイト扱いになります。
+2. GitHub リポジトリ **`dhpyenomoto/dhp-database`** を **Import**。
+3. **Root Directory** は **デフォルト（`/`）のまま**でOK（変更不要）。
+   - アプリがリポジトリ直下にあるため、サブフォルダ指定は不要です。
 4. Framework Preset は自動で **Next.js** になります（`vercel.json` で指定済み）。
 5. Build/Install コマンドは既定のままで構いません
    （ビルド時に `prisma generate` と provider 切替が自動実行されます）。
@@ -81,7 +81,10 @@ openssl rand -base64 48
 本番DBにテーブルを作成し、初期管理者を投入します。**ローカルのPCから本番DBに向けて**実行するのが簡単です。
 
 ```bash
+# リポジトリを clone（アプリは直下にあります）
+git clone https://github.com/dhpyenomoto/dhp-database.git
 cd dhp-database
+npm install
 
 # 本番DBの接続文字列と provider を指定して実行（値はご自身のものに置換）
 export DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?schema=public"
@@ -101,18 +104,18 @@ npm run seed
 実行後、ターミナルに初期管理者の情報が表示されます:
 
 ```
-初期管理者: 社員ID="admin" / パスワード="admin1234"
+初期管理者: 社員ID="dhp0001" / パスワード="eddy0093"
 ```
 
 ---
 
 ## 6. ログインしてパスワード変更
 
-1. Vercel の URL を開き、`admin` / `admin1234` でログイン。
+1. Vercel の URL を開き、`dhp0001` / `eddy0093` でログイン。
 2. ヘッダーの **「管理者」** → 各社員の **「PW再設定」** で、初期パスワードを必ず変更。
 3. 必要な社員アカウントを発行（区分 member / admin）。
 
-以上で公開完了です。以降、`main`（または接続ブランチ）へ push すると Vercel が自動で再デプロイします。
+以上で公開完了です。以降、`main` へ push すると Vercel が自動で再デプロイします。
 
 ---
 
@@ -126,11 +129,3 @@ npm run seed
   本番DBに対して実行できているか確認。
 - **接続数の上限に達する**（大規模利用時）→ `DATABASE_URL` を接続プーリング対応のURL
   （Vercel Postgres / Neon のプーリング用エンドポイント）に変更してください。
-
----
-
-## 既存の静的サイトとの関係
-
-- 既存の公開サイトはリポジトリ **ルート** から配信される別プロジェクトです。
-- 本アプリは **Root Directory = `dhp-database`** の **別 Vercel プロジェクト** として動くため、
-  両者は独立して共存します（互いに影響しません）。
