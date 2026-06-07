@@ -5,9 +5,9 @@ const prisma = new PrismaClient();
 
 // 初期投入用の値（本番では必ずパスワードを変更してください）
 const INITIAL_ADMIN = {
-  employeeId: "admin",
-  name: "初期管理者",
-  password: "admin1234",
+  employeeId: "dhp0001",
+  name: "管理者",
+  password: "eddy0093",
   role: "admin" as const,
 };
 
