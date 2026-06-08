@@ -2,7 +2,7 @@
 // 値（value）は DB 保存値であり、日本語ラベルそのものを使用します。
 
 /** 2. プロジェクト状況 */
-export const PROJECT_STATUSES = ["検討中", "決定", "進行中", "完了"] as const;
+export const PROJECT_STATUSES = ["検討中", "決定", "進行中", "完了", "見送り"] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 /** 状況バッジの色（一覧でひと目で分かるよう色分け） */
@@ -11,6 +11,7 @@ export const STATUS_BADGE_CLASS: Record<string, string> = {
   決定: "bg-blue-100 text-blue-800 border border-blue-300",
   進行中: "bg-emerald-100 text-emerald-800 border border-emerald-300",
   完了: "bg-gray-200 text-gray-700 border border-gray-300",
+  見送り: "bg-rose-100 text-rose-800 border border-rose-300",
 };
 
 /** 4. 区分 */
