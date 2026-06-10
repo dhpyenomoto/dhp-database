@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { FIELD_LABELS } from "@/lib/masters";
 
 export type AuditAction = "create" | "update" | "delete" | "restore";
-export type EntityType = "project" | "progressEntry";
+export type EntityType = "project" | "progressEntry" | "projectResource";
 
 export interface FieldChange {
   field: string;

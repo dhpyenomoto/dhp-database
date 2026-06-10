@@ -19,6 +19,7 @@ const ACTION_LABEL: Record<string, string> = {
 const ENTITY_LABEL: Record<string, string> = {
   project: "プロジェクト",
   progressEntry: "進捗ログ",
+  projectResource: "資料",
 };
 
 const ACTION_CLASS: Record<string, string> = {

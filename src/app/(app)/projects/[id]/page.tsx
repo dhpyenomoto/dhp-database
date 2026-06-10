@@ -7,6 +7,9 @@ import StatusBadge from "@/components/StatusBadge";
 import ProgressSection, {
   type ProgressEntryView,
 } from "@/components/ProgressSection";
+import ResourceSection, {
+  type ResourceView,
+} from "@/components/ResourceSection";
 import AuditTimeline, { type AuditView } from "@/components/AuditTimeline";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
 
@@ -33,16 +36,19 @@ export default async function ProjectDetailPage({
     where: { id },
     include: {
       progressEntries: { orderBy: { createdAt: "desc" } },
+      resources: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!project) notFound();
 
   const entryIds = project.progressEntries.map((e) => e.id);
+  const resourceIds = project.resources.map((r) => r.id);
   const logs = await prisma.auditLog.findMany({
     where: {
       OR: [
         { entityType: "project", entityId: id },
         { entityType: "progressEntry", entityId: { in: entryIds } },
+        { entityType: "projectResource", entityId: { in: resourceIds } },
       ],
     },
     orderBy: { createdAt: "desc" },
@@ -60,6 +66,18 @@ export default async function ProjectDetailPage({
     isDeleted: e.isDeleted,
     deletedById: e.deletedById,
     deletedAt: e.deletedAt ? e.deletedAt.toISOString() : null,
+  }));
+
+  const resourceViews: ResourceView[] = project.resources.map((r) => ({
+    id: r.id,
+    title: r.title,
+    url: r.url,
+    note: r.note,
+    createdById: r.createdById,
+    createdAt: r.createdAt.toISOString(),
+    isDeleted: r.isDeleted,
+    deletedById: r.deletedById,
+    deletedAt: r.deletedAt ? r.deletedAt.toISOString() : null,
   }));
 
   const logViews: AuditView[] = logs.map((l) => ({
@@ -142,6 +160,13 @@ export default async function ProjectDetailPage({
           <Field label="概要" value={project.summary} />
         </div>
       </section>
+
+      {/* 資料（Dropbox 等の外部リンク） */}
+      <ResourceSection
+        projectId={id}
+        resources={resourceViews}
+        isAdmin={isAdmin}
+      />
 
       {/* プロジェクトの現状（進捗ログ） */}
       <ProgressSection

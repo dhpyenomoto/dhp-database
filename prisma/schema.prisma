@@ -38,6 +38,8 @@ model Project {
   priceSummary String? // 12. 価格概要
   // 13. プロジェクトの現状（進捗ログ）
   progressEntries ProgressEntry[]
+  // 資料（Dropbox 等の外部リンク）
+  resources ProjectResource[]
 
   // メタ情報
   createdById String
@@ -64,6 +66,24 @@ model ProgressEntry {
   editedById String?
   editedAt   DateTime?
   // 論理削除（取り消し線で表示し続ける）
+  isDeleted   Boolean   @default(false)
+  deletedById String?
+  deletedAt   DateTime?
+
+  @@index([projectId])
+}
+
+/// プロジェクト資料（Dropbox 等の外部リンク。ファイル実体は外部に置き、URLのみ保持）
+model ProjectResource {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String // 資料名（例: 土地登記簿、図面 など）
+  url         String // 外部リンク（Dropbox / Google Drive 等）
+  note        String? // 補足メモ（任意）
+  createdById String // 登録者の社員ID
+  createdAt   DateTime @default(now())
+  // 論理削除（誤削除しても管理者が復元できる）
   isDeleted   Boolean   @default(false)
   deletedById String?
   deletedAt   DateTime?
